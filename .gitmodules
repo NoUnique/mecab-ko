@@ -1,0 +1,9 @@
+[submodule "_patch/mecab"]
+	path = _patch/mecab
+	url = https://github.com/taku910/mecab.git
+[submodule "_patch/mecab-ko/mecab-ko"]
+	path = _patch/mecab-ko/mecab-ko
+	url = https://bitbucket.org/eunjeon/mecab-ko.git
+[submodule "_patch/mecab-ko/mecab-ko-dic"]
+	path = _patch/mecab-ko/mecab-ko-dic
+	url = https://bitbucket.org/eunjeon/mecab-ko-dic.git

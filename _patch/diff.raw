@@ -1,0 +1,341 @@
+diff -wur --color mecab/mecab/src/common.h mecab-ko/mecab-ko/src/common.h
+--- mecab/mecab/src/common.h	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/common.h	2022-01-04 18:16:19.931977925 +0900
+@@ -81,15 +81,9 @@
+ #define EXIT_SUCCESS 0
+ #endif
+ 
+-#ifdef _WIN32
+-#ifdef __GNUC__
+-#define WPATH_FORCE(path) (MeCab::Utf8ToWide(path).c_str())
+-#define WPATH(path) (path)
+-#else
+-#define WPATH(path) WPATH_FORCE(path)
+-#endif
++#if defined(_WIN32) && !defined(__CYGWIN__)
++#define WPATH(path) (MeCab::Utf8ToWide(path).c_str())
+ #else
+-#define WPATH_FORCE(path) (path)
+ #define WPATH(path) (path)
+ #endif
+ 
+diff -wur --color mecab/mecab/src/connector.cpp mecab-ko/mecab-ko/src/connector.cpp
+--- mecab/mecab/src/connector.cpp	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/connector.cpp	2022-01-04 18:16:19.931977925 +0900
+@@ -16,10 +16,13 @@
+ bool Connector::open(const Param &param) {
+   const std::string filename = create_filename
+       (param.get<std::string>("dicdir"), MATRIX_FILE);
+-  return open(filename.c_str());
++  return open(
++      filename.c_str(),
++      param.get<std::string>("left-space-penalty-factor").c_str());
+ }
+ 
+ bool Connector::open(const char* filename,
++                     const char* left_space_penalty_factor_str,
+                      const char *mode) {
+   CHECK_FALSE(cmmap_->open(filename, mode))
+       << "cannot open: " << filename;
+@@ -38,13 +41,51 @@
+       << "file size is invalid: " << filename;
+ 
+   matrix_ = cmmap_->begin() + 2;
++
++  set_left_space_penalty_factor(left_space_penalty_factor_str);
+   return true;
+ }
+ 
++void Connector::set_left_space_penalty_factor(const char *factor_str) {
++  if (factor_str == NULL) return;
++
++  char s[512];
++  snprintf(s, sizeof(s), "%s", factor_str);
++
++  const size_t max_num_space_penalty_pos_ids = 64;
++  char *col[max_num_space_penalty_pos_ids];
++  const size_t n = tokenizeCSV(s, col, max_num_space_penalty_pos_ids);
++  for (size_t i = 0; i < n; i += 2) {
++    left_space_penalty_factor_.push_back(
++        SpacePenalty(
++            (unsigned short )strtoul(col[i], NULL, 0),
++            (int )strtol(col[i+1], NULL, 0)));
++  }
++}
++
+ void Connector::close() {
+   cmmap_->close();
+ }
+ 
++int Connector::cost(const Node *lNode, const Node *rNode) const {
++  return matrix_[lNode->rcAttr + lsize_ * rNode->lcAttr] +
++      rNode->wcost +
++      get_space_penalty_cost(rNode);
++}
++
++int Connector::get_space_penalty_cost(const Node *rNode) const {
++  if (rNode->rlength == rNode->length) {
++    // has no space
++    return 0;
++  }
++  for (size_t i = 0; i < left_space_penalty_factor_.size(); ++i) {
++    if (rNode->posid == left_space_penalty_factor_[i].posid_) {
++      return this->left_space_penalty_factor_[i].penalty_cost_;
++    }
++  }
++  return 0;
++}
++
+ bool Connector::openText(const char *filename) {
+   std::ifstream ifs(WPATH(filename));
+   if (!ifs) {
+diff -wur --color mecab/mecab/src/connector.h mecab-ko/mecab-ko/src/connector.h
+--- mecab/mecab/src/connector.h	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/connector.h	2022-01-04 18:16:19.931977925 +0900
+@@ -22,6 +22,21 @@
+   unsigned short  rsize_;
+   whatlog         what_;
+ 
++  // mecab-ko
++  class SpacePenalty {
++    public:
++      unsigned short posid_;
++      int penalty_cost_;
++      SpacePenalty(unsigned short posid, int penalty_cost)
++        : posid_(posid)
++        , penalty_cost_(penalty_cost)
++      {}
++  };
++  std::vector<SpacePenalty>left_space_penalty_factor_;
++
++  void set_left_space_penalty_factor(const char *factor_str);
++  int get_space_penalty_cost(const Node *rNode) const;
++
+  public:
+ 
+   bool open(const Param &param);
+@@ -41,16 +56,14 @@
+     return matrix_[rcAttr + lsize_ * lcAttr];
+   }
+ 
+-  inline int cost(const Node *lNode, const Node *rNode) const {
+-    return matrix_[lNode->rcAttr + lsize_ * rNode->lcAttr] + rNode->wcost;
+-  }
++  int cost(const Node *lNode, const Node *rNode) const;
+ 
+   // access to raw matrix
+   short *mutable_matrix() { return &matrix_[0]; }
+   const short *matrix() const { return &matrix_[0]; }
+ 
+   bool openText(const char *filename);
+-  bool open(const char *filename, const char *mode = "r");
++  bool open(const char *filename, const char *white_space_penalty_info = "", const char *mode = "r");
+ 
+   bool is_valid(size_t lid, size_t rid) const {
+     return (lid >= 0 && lid < rsize_ && rid >= 0 && rid < lsize_);
+diff -wur --color mecab/mecab/src/dictionary.cpp mecab-ko/mecab-ko/src/dictionary.cpp
+--- mecab/mecab/src/dictionary.cpp	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/dictionary.cpp	2022-01-04 18:16:19.931977925 +0900
+@@ -172,21 +172,23 @@
+   property.set_charset(from.c_str());
+ 
+   if (!matrix.openText(matrix_file.c_str()) &&
+-      !matrix.open(matrix_bin_file.c_str())) {
++      !matrix.open(
++          matrix_bin_file.c_str(),
++          param.get<std::string>("white-space-penalty-infos").c_str())) {
+     matrix.set_left_size(1);
+     matrix.set_right_size(1);
+   }
+ 
+   cid.open(left_id_file.c_str(),
+            right_id_file.c_str(), &config_iconv);
+-  CHECK_DIE(cid.left_size()  == matrix.left_size() &&
+-            cid.right_size() == matrix.right_size())
++  CHECK_DIE(cid.left_size()  == matrix.right_size() &&
++            cid.right_size() == matrix.left_size())
+       << "Context ID files("
+       << left_id_file
+       << " or "
+       << right_id_file << " may be broken: "
+-      << cid.left_size() << " " << matrix.left_size() << " "
+-      << cid.right_size() << " " << matrix.right_size();
++      << cid.left_size() << " " << matrix.right_size() << " "
++      << cid.right_size() << " " << matrix.left_size();
+ 
+   std::ofstream ofs(output);
+   CHECK_DIE(ofs) << "permission denied: " << output;
+@@ -282,7 +284,9 @@
+   }
+ 
+   if (!matrix.openText(matrix_file.c_str()) &&
+-      !matrix.open(matrix_bin_file.c_str())) {
++      !matrix.open(
++          matrix_bin_file.c_str(),
++          param.get<std::string>("white-space-penalty-infos").c_str())) {
+     matrix.set_left_size(1);
+     matrix.set_right_size(1);
+   }
+@@ -352,8 +356,8 @@
+           cid.reset(new ContextID);
+           cid->open(left_id_file.c_str(),
+                     right_id_file.c_str(), &config_iconv);
+-          CHECK_DIE(cid->left_size()  == matrix.left_size() &&
+-                    cid->right_size() == matrix.right_size())
++          CHECK_DIE(cid->left_size()  == matrix.right_size() &&
++                    cid->right_size() == matrix.left_size())
+               << "Context ID files("
+               << left_id_file
+               << " or "
+@@ -466,7 +470,7 @@
+   Darts::DoubleArray da;
+   CHECK_DIE(da.build(str.size(), const_cast<char **>(&str[0]),
+                      &len[0], &val[0], &progress_bar_darts) == 0)
+-      << "unknown error in building double-array";
++      << "unkown error in building double-array";
+ 
+   std::string tbuf;
+   for (size_t i = 0; i < dic.size(); ++i) {
+diff -wur --color mecab/mecab/src/mecab.h mecab-ko/mecab-ko/src/mecab.h
+--- mecab/mecab/src/mecab.h	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/mecab.h	2022-01-04 18:16:19.931977925 +0900
+@@ -1122,7 +1122,7 @@
+ 
+   virtual ~Model() {}
+ 
+-#ifndef SWIG
++#ifndef SIWG
+   /**
+    * Factory method to create a new Model with a specified main's argc/argv-style parameters.
+    * Return NULL if new model cannot be initialized. Use MeCab::getLastError() to obtain the
+@@ -1411,7 +1411,7 @@
+ 
+   virtual ~Tagger() {}
+ 
+-#ifndef SWIG
++#ifndef SIWG
+   /**
+    * Factory method to create a new Tagger with a specified main's argc/argv-style parameters.
+    * Return NULL if new model cannot be initialized. Use MeCab::getLastError() to obtain the
+diff -wur --color mecab/mecab/src/mmap.h mecab-ko/mecab-ko/src/mmap.h
+--- mecab/mecab/src/mmap.h	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/mmap.h	2022-01-04 18:16:19.931977925 +0900
+@@ -104,7 +104,7 @@
+       CHECK_FALSE(false) << "unknown open mode:" << filename;
+     }
+ 
+-    hFile = ::CreateFileW(WPATH_FORCE(filename), mode1, FILE_SHARE_READ, 0,
++    hFile = ::CreateFileW(WPATH(filename), mode1, FILE_SHARE_READ, 0,
+                           OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+     CHECK_FALSE(hFile != INVALID_HANDLE_VALUE)
+         << "CreateFile() failed: " << filename;
+diff -wur --color mecab/mecab/src/tagger.cpp mecab-ko/mecab-ko/src/tagger.cpp
+--- mecab/mecab/src/tagger.cpp	2022-01-04 18:15:39.600016347 +0900
++++ mecab-ko/mecab-ko/src/tagger.cpp	2022-01-04 18:16:19.931977925 +0900
+@@ -564,8 +564,8 @@
+ 
+ const char *TaggerImpl::parse(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  initRequestType();
+   lattice->set_sentence(str, len);
++  initRequestType();
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -581,8 +581,8 @@
+ const char *TaggerImpl::parse(const char *str, size_t len,
+                               char *out, size_t len2) {
+   Lattice *lattice = mutable_lattice();
+-  initRequestType();
+   lattice->set_sentence(str, len);
++  initRequestType();
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -601,8 +601,8 @@
+ 
+ const Node *TaggerImpl::parseToNode(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  initRequestType();
+   lattice->set_sentence(str, len);
++  initRequestType();
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -616,9 +616,9 @@
+ 
+ bool TaggerImpl::parseNBestInit(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
++  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
+-  lattice->set_sentence(str, len);
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return false;
+@@ -670,9 +670,9 @@
+ const char* TaggerImpl::parseNBest(size_t N,
+                                    const char* str, size_t len) {
+   Lattice *lattice = mutable_lattice();
++  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
+-  lattice->set_sentence(str, len);
+ 
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+@@ -690,9 +690,9 @@
+ const char* TaggerImpl::parseNBest(size_t N, const char* str, size_t len,
+                                    char *out, size_t len2) {
+   Lattice *lattice = mutable_lattice();
++  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
+-  lattice->set_sentence(str, len);
+ 
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+diff -wur --color mecab/mecab/src/utils.cpp mecab-ko/mecab-ko/src/utils.cpp
+--- mecab/mecab/src/utils.cpp	2022-01-04 18:15:39.608016339 +0900
++++ mecab-ko/mecab-ko/src/utils.cpp	2022-01-04 18:16:19.939977916 +0900
+@@ -330,24 +330,23 @@
+   scoped_fixed_array<wchar_t, BUF_SIZE> v;
+   DWORD vt;
+   DWORD size = v.size() * sizeof(v[0]);
+-  DWORD qvres;
+ 
+   if (rcfile.empty()) {
+     ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"software\\mecab", 0, KEY_READ, &hKey);
+-    qvres = ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
++    ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
+                        reinterpret_cast<BYTE *>(v.get()), &size);
+     ::RegCloseKey(hKey);
+-    if (qvres == ERROR_SUCCESS && vt == REG_SZ) {
++    if (vt == REG_SZ) {
+       rcfile = WideToUtf8(v.get());
+     }
+   }
+ 
+   if (rcfile.empty()) {
+     ::RegOpenKeyExW(HKEY_CURRENT_USER, L"software\\mecab", 0, KEY_READ, &hKey);
+-    qvres = ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
++    ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
+                        reinterpret_cast<BYTE *>(v.get()), &size);
+     ::RegCloseKey(hKey);
+-    if (qvres == ERROR_SUCCESS && vt == REG_SZ) {
++    if (vt == REG_SZ) {
+       rcfile = WideToUtf8(v.get());
+     }
+   }
+diff -wur --color mecab/mecab/src/writer.cpp mecab-ko/mecab-ko/src/writer.cpp
+--- mecab/mecab/src/writer.cpp	2022-01-04 18:15:39.608016339 +0900
++++ mecab-ko/mecab-ko/src/writer.cpp	2022-01-04 18:16:19.939977916 +0900
+@@ -60,7 +60,7 @@
+       eon_format_key += "-";
+       eon_format_key += ostyle;
+       const std::string tmp = param.get<std::string>(node_format_key.c_str());
+-      CHECK_FALSE(!tmp.empty()) << "unknown format type [" << ostyle << "]";
++      CHECK_FALSE(!tmp.empty()) << "unkown format type [" << ostyle << "]";
+     }
+ 
+     const std::string node_format2 =
