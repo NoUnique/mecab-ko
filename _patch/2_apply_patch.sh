@@ -24,7 +24,7 @@ function fn_patch() {
 
     PATCH=$(realpath ${PATCH})
     cd ${TARGET}
-    patch -p${LEVEL} < ${PATCH}
+    patch -p${LEVEL} -i ${PATCH}
     cd -
 }
 
