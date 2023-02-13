@@ -1,0 +1,318 @@
+diff --git a/doc/dic.html b/doc/dic.html
+index 9fdff77..d903f4b 100644
+--- a/doc/dic.html
++++ b/doc/dic.html
+@@ -173,7 +173,8 @@ EOS
+ <h2>コストの自動推定機能</h2>
+ <p>
+ 学習時に出力されたモデルファイルがあれば, 新規単語のコスト値を自動推定することができます.
+-mecab-ipadicのモデルファイルは<a href="https://code.google.com/p/mecab/downloads/detail?name=mecab-ipadic-2.7.0-20070801.model.bz2">こちら</a>よりダウンロード可能です. (bzip2で圧縮されているため, 適宜解凍してください.) 自動推定を行なう場合は, -m オプションでモデルファイルを指定し, コストのCSVフィールドを空にします. 空以外の値が設定されると, その値が優先されます.
++mecab-ipadicのモデルファイルは<a href="https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7bnc5aFZSTE9qNnM">こちら</a>よりダウンロード可能です.
++(bzip2で圧縮されているため, 適宜解凍してください.) 自動推定を行なう場合は, -m オプションでモデルファイルを指定し, コストのCSVフィールドを空にします. 空以外の値が設定されると, その値が優先されます.
+ </p>
+ <pre>% /usr/local/libexec/mecab/mecab-dict-index -m model_file -d/usr/local/lib/mecab/dic/ipadic \
+ -u foo.dic -f euc-jp -t euc-jp foo.csv</pre>
+diff --git a/doc/index.html b/doc/index.html
+index 5a30f05..0babaeb 100644
+--- a/doc/index.html
++++ b/doc/index.html
+@@ -339,13 +339,14 @@ License), <a href="http://www.gnu.org/licenses/lgpl.txt">LGPL</a>(Lesser GNU Gen
+ <li><b>MeCab</b> 本体
+ <h3><a name="source">Source</a></h3>
+ <ul>
+-<li>mecab-0.996.tar.gz:<a href="http://code.google.com/p/mecab/downloads/detail?name=mecab-0.996.tar.gz">ダウンロード</a>
++<li>mecab-0.996.tar.gz:<a href="https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE">ダウンロード</a>
++
+ <li>辞書は含まれていません. 動作には別途辞書が必要です。
+ </ul>
+ 
+ <h3><a name="win">Binary package for MS-Windows</a></h3>
+ <ul>
+-<li>mecab-0.996.exe:<a href="http://code.google.com/p/mecab/downloads/detail?name=mecab-0.996.exe">ダウンロード</a>
++<li>mecab-0.996.exe:<a href="https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7WElGUGt6ejlpVXc">ダウンロード</a>
+ <li>Windows 版には コンパイル済みの IPA 辞書が含まれています</a>
+ </li>
+ 
+@@ -356,15 +357,14 @@ License), <a href="http://www.gnu.org/licenses/lgpl.txt">LGPL</a>(Lesser GNU Gen
+ <ul>
+ <li>IPA 辞書, IPAコーパス に基づき
+     <a href="http://www.cis.upenn.edu/~pereira/papers/crf.pdf">CRF</a>
+-でパラメータ推定した辞書です。 <b>(推奨)</b> <a
+-href="http://code.google.com/p/mecab/downloads/detail?name=mecab-ipadic-2.7.0-20070801.tar.gz">ダウンロード</a></li>
++でパラメータ推定した辞書です。 <b>(推奨)</b> <a href="https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM">ダウンロード</a></li>
+ </ul>
+ 
+ <h3>Juman 辞書</h3>
+ <ul>
+ <li>Juamn 辞書, 京都コーパスに基づき
+     <a href="http://www.cis.upenn.edu/~pereira/papers/crf.pdf">CRF</a>
+-でパラメータ推定した辞書です。 <a href="http://code.google.com/p/mecab/downloads/detail?name=mecab-jumandic-5.1-20070304.tar.gz">ダウンロード</a></li>
++でパラメータ推定した辞書です。 <a href="https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7X2pESGlLREpxdXM">ダウンロード</a></li>
+ </ul>
+ 
+ <h3>Unidic 辞書</h3>
+@@ -375,7 +375,7 @@ href="http://code.google.com/p/mecab/downloads/detail?name=mecab-ipadic-2.7.0-20
+ 
+ <li><a name="script"><b>perl/ruby/python/java バインディング</b></a>
+ <ul>
+-<li> <a href="http://code.google.com/p/mecab/downloads/list">ダウンロード</a>
++<li> <a href="https://drive.google.com/open?id=0B4y35FiV1wh7fjQ5SkJETEJEYzlqcUY4WUlpZmR4dDlJMWI5ZUlXN2xZN2s2b0pqT3hMbTQ&authuser=1">ダウンロード</a>
+ </ul>
+ </ul>
+ </ul>
+diff --git a/doc/libmecab.html b/doc/libmecab.html
+index 142acfc..f67c102 100644
+--- a/doc/libmecab.html
++++ b/doc/libmecab.html
+@@ -421,7 +421,7 @@ int main (int argc, char **argv)  {
+ 
+   mecab_destroy(mecab);
+   mecab_lattice_destroy(lattice);
+-  mecab_model_destory(model);
++  mecab_model_destroy(model);
+ 
+   return 0;
+ }
+diff --git a/java/Makefile b/java/Makefile
+index 2c3332e..2c08404 100644
+--- a/java/Makefile
++++ b/java/Makefile
+@@ -3,25 +3,50 @@ JAVAC=javac
+ JAVA=java
+ JAR=jar
+ CXX=c++
+-INCLUDE=/usr/lib/jvm/java-6-openjdk/include
++ifeq ($(OS),Windows_NT)
++    #TBA
++else
++    OS:=$(shell uname -s)
++    ifeq ($(OS),Linux)
++        JAVA_HOME=/usr/lib/jvm/java-6-openjdk
++        JNI_MD_FOLDER=linux
++        LIB_TYPE=-shared
++        LIB_EXT=so
++        LD_PATH_VAR=LD_LIBRARY_PATH
++    endif
++    ifeq ($(OS),Darwin)
++        JAVA_HOME=$(shell /usr/libexec/java_home)
++        JNI_MD_FOLDER=darwin
++        LIB_TYPE=-dynamiclib
++        LIB_EXT=dylib
++        LD_PATH_VAR=DYLD_LIBRARY_PATH
++    endif
++    #TBA
++endif
++INCLUDE=$(JAVA_HOME)/include
+ 
+ PACKAGE=org/chasen/mecab
+ 
+ LIBS=`mecab-config --libs`
+-INC=`mecab-config --cflags` -I$(INCLUDE) -I$(INCLUDE)/linux
++INC=`mecab-config --cflags` -I$(INCLUDE) -I$(INCLUDE)/$(JNI_MD_FOLDER)
++
++ifeq ($(OS),Darwin)
++    LIBS:=-arch x86_64 $(LIBS)
++    INC:=-arch x86_64 $(INC)
++endif
+ 
+ all:
+ 	$(CXX) -O3 -c -fpic $(TARGET)_wrap.cxx  $(INC)
+-	$(CXX) -shared  $(TARGET)_wrap.o -o lib$(TARGET).so $(LIBS)
++	$(CXX) $(LIB_TYPE) $(TARGET)_wrap.o -o lib$(TARGET).$(LIB_EXT) $(LIBS)
+ 	$(JAVAC) $(PACKAGE)/*.java
+ 	$(JAVAC) test.java
+ 	$(JAR) cfv $(TARGET).jar $(PACKAGE)/*.class
+ 
+ test:
+-	env LD_LIBRARY_PATH=. $(JAVA) test
++	env $(LD_PATH_VAR)=. $(JAVA) test
+ 
+ clean:
+-	rm -fr *.jar *.o *.so *.class $(PACKAGE)/*.class
++	rm -fr *.jar *.o *.$(LIB_EXT) *.class $(PACKAGE)/*.class
+ 	
+ cleanall:
+ 	rm -fr $(TARGET).java *.cxx
+diff --git a/src/common.h b/src/common.h
+index 4ed43c9..d1fc459 100644
+--- a/src/common.h
++++ b/src/common.h
+@@ -81,9 +81,15 @@
+ #define EXIT_SUCCESS 0
+ #endif
+ 
+-#if defined(_WIN32) && !defined(__CYGWIN__)
+-#define WPATH(path) (MeCab::Utf8ToWide(path).c_str())
++#ifdef _WIN32
++#ifdef __GNUC__
++#define WPATH_FORCE(path) (MeCab::Utf8ToWide(path).c_str())
++#define WPATH(path) (path)
++#else
++#define WPATH(path) WPATH_FORCE(path)
++#endif
+ #else
++#define WPATH_FORCE(path) (path)
+ #define WPATH(path) (path)
+ #endif
+ 
+diff --git a/src/dictionary.cpp b/src/dictionary.cpp
+index f171dd4..0ff0b05 100644
+--- a/src/dictionary.cpp
++++ b/src/dictionary.cpp
+@@ -466,7 +466,7 @@ bool Dictionary::compile(const Param &param,
+   Darts::DoubleArray da;
+   CHECK_DIE(da.build(str.size(), const_cast<char **>(&str[0]),
+                      &len[0], &val[0], &progress_bar_darts) == 0)
+-      << "unkown error in building double-array";
++      << "unknown error in building double-array";
+ 
+   std::string tbuf;
+   for (size_t i = 0; i < dic.size(); ++i) {
+diff --git a/src/mecab.h b/src/mecab.h
+index 6c1b637..ce7f265 100644
+--- a/src/mecab.h
++++ b/src/mecab.h
+@@ -1122,7 +1122,7 @@ public:
+ 
+   virtual ~Model() {}
+ 
+-#ifndef SIWG
++#ifndef SWIG
+   /**
+    * Factory method to create a new Model with a specified main's argc/argv-style parameters.
+    * Return NULL if new model cannot be initialized. Use MeCab::getLastError() to obtain the
+@@ -1411,7 +1411,7 @@ public:
+ 
+   virtual ~Tagger() {}
+ 
+-#ifndef SIWG
++#ifndef SWIG
+   /**
+    * Factory method to create a new Tagger with a specified main's argc/argv-style parameters.
+    * Return NULL if new model cannot be initialized. Use MeCab::getLastError() to obtain the
+diff --git a/src/mmap.h b/src/mmap.h
+index 4ef8003..63243ca 100644
+--- a/src/mmap.h
++++ b/src/mmap.h
+@@ -104,7 +104,7 @@ template <class T> class Mmap {
+       CHECK_FALSE(false) << "unknown open mode:" << filename;
+     }
+ 
+-    hFile = ::CreateFileW(WPATH(filename), mode1, FILE_SHARE_READ, 0,
++    hFile = ::CreateFileW(WPATH_FORCE(filename), mode1, FILE_SHARE_READ, 0,
+                           OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+     CHECK_FALSE(hFile != INVALID_HANDLE_VALUE)
+         << "CreateFile() failed: " << filename;
+diff --git a/src/tagger.cpp b/src/tagger.cpp
+index 9821d09..2780dbb 100644
+--- a/src/tagger.cpp
++++ b/src/tagger.cpp
+@@ -564,8 +564,8 @@ const char *TaggerImpl::parse(const char *str) {
+ 
+ const char *TaggerImpl::parse(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
++  lattice->set_sentence(str, len);
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -581,8 +581,8 @@ const char *TaggerImpl::parse(const char *str, size_t len) {
+ const char *TaggerImpl::parse(const char *str, size_t len,
+                               char *out, size_t len2) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
++  lattice->set_sentence(str, len);
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -601,8 +601,8 @@ const Node *TaggerImpl::parseToNode(const char *str) {
+ 
+ const Node *TaggerImpl::parseToNode(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
++  lattice->set_sentence(str, len);
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return 0;
+@@ -616,9 +616,9 @@ bool TaggerImpl::parseNBestInit(const char *str) {
+ 
+ bool TaggerImpl::parseNBestInit(const char *str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
++  lattice->set_sentence(str, len);
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+     return false;
+@@ -670,9 +670,9 @@ const char* TaggerImpl::parseNBest(size_t N, const char* str) {
+ const char* TaggerImpl::parseNBest(size_t N,
+                                    const char* str, size_t len) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
++  lattice->set_sentence(str, len);
+ 
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+@@ -690,9 +690,9 @@ const char* TaggerImpl::parseNBest(size_t N,
+ const char* TaggerImpl::parseNBest(size_t N, const char* str, size_t len,
+                                    char *out, size_t len2) {
+   Lattice *lattice = mutable_lattice();
+-  lattice->set_sentence(str, len);
+   initRequestType();
+   lattice->add_request_type(MECAB_NBEST);
++  lattice->set_sentence(str, len);
+ 
+   if (!parse(lattice)) {
+     set_what(lattice->what());
+diff --git a/src/utils.cpp b/src/utils.cpp
+index fe86657..0e80562 100644
+--- a/src/utils.cpp
++++ b/src/utils.cpp
+@@ -330,23 +330,24 @@ bool load_dictionary_resource(Param *param) {
+   scoped_fixed_array<wchar_t, BUF_SIZE> v;
+   DWORD vt;
+   DWORD size = v.size() * sizeof(v[0]);
++  DWORD qvres;
+ 
+   if (rcfile.empty()) {
+     ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"software\\mecab", 0, KEY_READ, &hKey);
+-    ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
++    qvres = ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
+                        reinterpret_cast<BYTE *>(v.get()), &size);
+     ::RegCloseKey(hKey);
+-    if (vt == REG_SZ) {
++    if (qvres == ERROR_SUCCESS && vt == REG_SZ) {
+       rcfile = WideToUtf8(v.get());
+     }
+   }
+ 
+   if (rcfile.empty()) {
+     ::RegOpenKeyExW(HKEY_CURRENT_USER, L"software\\mecab", 0, KEY_READ, &hKey);
+-    ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
++    qvres = ::RegQueryValueExW(hKey, L"mecabrc", 0, &vt,
+                        reinterpret_cast<BYTE *>(v.get()), &size);
+     ::RegCloseKey(hKey);
+-    if (vt == REG_SZ) {
++    if (qvres == ERROR_SUCCESS && vt == REG_SZ) {
+       rcfile = WideToUtf8(v.get());
+     }
+   }
+diff --git a/src/writer.cpp b/src/writer.cpp
+index ed68767..0ef6975 100644
+--- a/src/writer.cpp
++++ b/src/writer.cpp
+@@ -60,7 +60,7 @@ bool Writer::open(const Param &param) {
+       eon_format_key += "-";
+       eon_format_key += ostyle;
+       const std::string tmp = param.get<std::string>(node_format_key.c_str());
+-      CHECK_FALSE(!tmp.empty()) << "unkown format type [" << ostyle << "]";
++      CHECK_FALSE(!tmp.empty()) << "unknown format type [" << ostyle << "]";
+     }
+ 
+     const std::string node_format2 =
